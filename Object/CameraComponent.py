@@ -1,0 +1,162 @@
+#CameraComponent
+
+from . import Component
+from .. import Log
+from .. import Renderer
+from .. import Event
+
+import xml.etree.ElementTree as ET
+import pygame, math
+
+SCREENDIMENSIONS = Renderer.Renderer.SCREEN_DIMENSIONS
+
+class CameraComponent(Component.Component):
+    """A component that really only the camera should have. Can't think of any situation 
+where something other than the camera would have it. At some point I want to implement a 
+rotation camera!"""
+    name = 'Camera'
+    def __init__(self, Object):
+        super().__init__(Object)
+        self._transform = None
+        self._leftBound = 0
+        self._rightBound = 0
+        self._topBound = 0
+        self._bottomBound = 0
+        self._QuadTree = None
+        self._renderPointer = None
+
+    def Initialize(self):
+        self._transform = super().GetComponent(Component.TransformComponent)
+        if (self._transform == None):
+            Log.LogError("CameraComponent can't get the transformComponent!")
+            return False
+    
+        x, y = self._transform.X, self._transform.Y
+        self._leftBound = math.floor(x - (SCREENDIMENSIONS[0] / 2))
+        self._rightBound = math.floor(x + (SCREENDIMENSIONS[0] / 2))
+        self._bottomBound = math.floor(y + (SCREENDIMENSIONS[1] / 2))
+        self._topBound = math.floor(y - (SCREENDIMENSIONS[1] / 2))
+
+        eventManager = Event.EventManager.EventManager.gEventManager
+        CameraType = Event.Event.GetType('MoveCamera')
+        AddUpdateRectType = Event.GetType('AddUpdateRect')
+        if eventManager != None:
+            eventManager.RegisterDelegate(CameraType, self.MoveCameraDelegate)
+            eventManager.RegisterDelegate(AddUpdateRectType,
+                                          self.AddUpdateRectDelegate)
+
+        from .. import Engine
+        self._QuadTree = Engine.Engine.gEngine.GameLogic.QuadTree
+        if (self._QuadTree == None):
+            Log.LogError('QuadTree retrieval by the Camera failed')
+        self._renderPointer = Engine.Engine.gEngine.GameLogic.Renderer
+        if self._renderPointer == None:
+            Log.LogError("Couldn't retrieve the Renderer from the Camera")
+
+        return True
+
+    def Update(self, deltaMilliseconds):
+        Log.LogMessage("Camera Update!")
+        selfRect = pygame.Rect(self._leftBound, self._topBound,
+                               self._rightBound - self._leftBound,
+                               self._bottomBound - self._topBound)
+        objects = self._QuadTree.CollideElement(selfRect)
+        Log.LogMessage("Number of objects in QuadTree = " + str(len(objects)))
+        for item in objects:
+            item.Schedule((self._leftBound, self._topBound))
+        
+
+    def MoveCameraDelegate(self, EventData):
+        """This method is a delegate for 'MoveCamera' events"""
+        x = EventData.XTranslate
+        y = EventData.YTranslate
+        self.Translate(x, y)
+
+    def AddUpdateRectDelegate(self, data):
+        #Get the pygame version of the rect
+        rRect = data.Rect
+        if rRect == None:
+            return
+        rect = data.Rect.Rect
+        if rect.x + rect.w > self._leftBound or \
+           rect.x < self._rightBound or \
+           rect.y + rect.h > self._topBound or \
+           rect.y < self._bottomBound:
+            self._renderPointer.AddUpdateRect(rRect)
+
+        
+    
+    def Load(self, XMLElement):
+        """This method needs to load the camera coordinates from an XML"""
+        try:
+            self._leftBound = int(XMLElement.find("leftbound").text)
+            self._rightBound = int(XMLElement.find("rightbound").text)
+            self._topBound = int(XMLElement.find("topBound").text)
+            self._bottomBound = int(XMLElement.find("bottomBound").text)
+        except (AttributeError, ValueError):
+            Log.LogError("Failure to load CameraComponent from XML document")
+            
+
+    def Translate(self, *args):
+        """This method is to be used as a callback. It will modify the transform in order
+to manuver the camera according to the parameters"""
+        if len(args) == 1:
+            #It's a tuple
+            self._transform.X = args[0][0]
+            self._transform.Y = args[0][1]
+            self._Move()
+
+        elif len(args) == 2:
+            #It's a pair of numbers
+            self._transform.X = args[0]
+            self._transform.Y = args[1]
+            self._Move()
+
+    def _Move(self):
+        """This method shouldn't be called outside of this class, it's used to reset's its
+own values according to the transform"""
+        self._leftBound = self._transform.X - (SCREEN_DIMENSIONS[0] / 2)
+        self._rightBound = self._transform.X + (SCREEN_DIMENSIONS[0] / 2)
+        self._topBound = self._transform.Y + (SCREEN_DIMENSIONS[1] / 2)
+        self._bottomBound = self._transform.Y - (SCREEN_DIMENSIONS[1] / 2)
+            
+
+    
+class MoveCameraData(Event.Event.EventData):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self._xTranslate = 0
+        self._yTranslate = 0
+        self._rotationTranslate = 0
+        self._scaleTranslate = 0
+        if len(args) == 1:
+            #It's a tuple
+            self._xTranslate = args[0][0]
+            self._yTranslate = args[0][1]
+
+        elif len(args) > 1:
+            self._xTranslate = args[0]
+            self._yTranslate = args[1]
+        else:
+            Log.LogError("Constructed MoveCamera Event without right params!")
+
+        
+        self._rotationTranslate = kwargs.get('rotation', self._rotationTranslate)
+        self._scaleTranslate = kwargs.get('scale', self._scaleTranslate)
+
+    @property
+    def XTranslate(self):
+        return self._xTranslate
+
+    @property
+    def YTranslate(self):
+        return self._yTranslate
+
+    @property
+    def RotationTranslate(self):
+        return self._rotationTranslate
+
+    @property
+    def ScaleTranslate(self):
+        return self._scaleTranslate
+    

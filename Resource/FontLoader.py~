@@ -1,0 +1,77 @@
+#FontLoader.py
+
+import pygame
+from . import ResourceCache
+
+class FontLoader(ResourceCache.Loader):
+    def __init__(self):
+        super().__init__()
+
+    def Load(self, AbsoluteFilepath):
+        return Font(AsoluteFilepath)
+
+
+    def GetExtension(self):
+        return ['.ttf']
+
+
+
+class Font():
+    def __init__(self, pygameFont):
+        self._font = pygameFont
+        self._underline = False
+        self._bold = False
+        self._italic = False
+
+    def Render(self, text, size, antialias, color,
+               background = None):
+        font = pygame.Font(self._font, size)
+        font.set_underline(self._underline)
+        font.set_bold(self._bold)
+        self.set_italic(self._italic)
+        return font.render(text, antialias, color, background)
+
+    def Size(self, text, size):
+        font = pygame.Font(self._font, size)
+        return font.size(text)
+
+    def SetUnderline(self, value):
+        if type(value) != bool:
+            return
+        self._underline = value
+
+    def GetUnderline(self):
+        return self._underline
+
+    def SetBold(self, value):
+        if type(value) != bool:
+            return
+        self._bold = value
+
+    def GetBold(self):
+        return self._bold
+
+    def SetItalic(self, value):
+        if type(value) != bool:
+            return
+        self._italic = value
+
+    def GetItalic(self):
+        return self._italic
+
+    def GetLinesize(self, size):
+        font = pygame.Font(self._font, size)
+        return font.get_linesize()
+
+    def GetHeight(self, size):
+        font = pygame.Font(self._font, size)
+        return font.get_height()
+
+    def GetAscent(self, size):
+        font = pygame.Font(self._font, size)
+        return font.get_ascent()
+
+    def GetDescent(self, size):
+        font = pygame.Font(self._font, size)
+        return font.get_descent()
+    

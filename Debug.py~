@@ -1,0 +1,9 @@
+#Debug.py
+
+import pygame
+
+
+"""All of these functions should only be called after
+everything has been initialized. This will crash and burn if pygame
+hasn't been initialized or the screen hasn't been created yet"""
+def DrawRect(

@@ -1,0 +1,80 @@
+#ButtonComponent.py
+
+from . import GuiComponent
+
+class ButtonGuiComponent(GuiComponent.LabelGuiComponent):
+    name = 'gui.button'
+    def __init__(self, Object):
+        super().__init__(Object)
+
+
+
+    def Initialize(self):
+        """Initialize the label part, which should already create
+the 'default' surface. Now our render method has to create 'grey', 'hover',
+and 'active' surfaces"""
+        GuiComponent.GuiComponent.Initialize(self)
+        surface = GuiComponent.LabelGuiComponent.Render(self)
+        self._animationComponent.AddAnimation('default', [surface.get_rect()],
+                                              0, surface)
+
+        
+        grey, hover, active = self.Render()
+        self._animationComponent.AddAnimation('grey', [grey.get_rect()],
+                                              0, grey)
+        self._animationComponent.AddAnimation('hover', [hover.get_rect()],
+                                              0, hover)
+        self._animationComponent.AddAnimation('active', [active.get_rect()],
+                                              0, active)
+
+        self._animationComponent.ChangeAnimation('default', True)
+        self.SetHitbox()
+        return True
+
+
+    def Load(self, XMLElement):
+        super().Load(XMLElement)
+        
+    def Render(self):
+        self._dWidth, self._dHeight = self._width, self._height
+        grey, gWidth, gHeight = GuiComponent.RenderLabel(self._theme,
+                                                         'button.grey',
+                                                         self._text
+                                                         )
+        self._gWidth, self._gHeight = gWidth, gHeight
+        hover, hWidth, hHeight = GuiComponent.RenderLabel(self._theme,
+                                                          'button.hover',
+                                                          self._text + "A"
+                                                          )
+        self._hWidth, self._hHeight = hWidth, hHeight
+        active, aWidth, aHeight = GuiComponent.RenderLabel(self._theme,
+                                                           'button.active',
+                                                           self._text
+                                                           )
+        self._aWidth, self._aHeight = aWidth, aHeight
+        return grey, hover, active
+
+    def OnClick(self, coor):
+        super().OnClick(coor)
+        if not self._greyedout:
+            self._width, self._height = self._aWidth, self._aHeight
+            self.SetHitbox()
+            self.CaptureEvents()
+
+    def OnClickUp(self, coor):
+        super().OnClickUp(coor)
+        if not self._greyedout:
+            self._width, self._height = self._dWidth, self._dHeight
+            self.SetHitbox()
+
+    def GreyOut(self):
+        super().GreyOut()
+        self._width, self._height = self._gWidth, self._gHeight
+        self.SetHitbox()
+
+    def OnHover(self, coor):
+        super().OnHover(coor)
+        if not self._greyedout:
+            self._width, self._height = self._hWidth, self._hHeight
+            self.SetHitbox()
+        

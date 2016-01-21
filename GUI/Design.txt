@@ -1,0 +1,45 @@
+How the gui system will work:
+
+'There's widgets, and containers for widgets'
+
+We implement something in the event system that tests the coordinates against the toplevel gui containers before calling up the normal mouse
+	delegates that are set in the mouse button down
+
+Gui objects have at least 3 components:
+render
+animation
+gui
+
+the gui component looks like this:
+has width and height and x and y in pixel coordinates? of the hitbox for the mouse
+has a mousebutton up and mousebutton down and mousebutton hover functions
+sets up the animations for the buttons and what not:
+	they can loop or not
+	they might not even have animations for a certain gui object
+a container contains a list of gui elements
+they can turn the hitbox on or off
+they can be visible or not
+they can have tooltips
+they'll have render methods
+if a container receives an event, it sends it down to its children until one of them returns 'True' which means that the event was handled and
+	nothing more needs to happen
+there is a pointer to the theme object that has the theme of the gui
+
+There will be a gui component, and then the rest of the widgets will inherit from that component
+	i.e. A ButtonGuiComponent
+	...  A CheckBoxGuiComponent
+	
+There will be gui components that are in a group, and when the widget state changes it will call the group
+	This will be a gui group object, with a gui group component
+	i.e. Radio buttons will be assigned to a group, and when you click one it makes sure none of the others are clicked
+
+There will be a subsystem of a quadtree that keeps track of gui elements inside the event manager
+There will also be a theme game object that loads and knows how to render the widgets
+
+The theme will be in a folder with the extension .theme
+the theme object will be loaded up from a scene (.tmx) file
+	The theme object in the .tmx file will look for a theme that was loaded in the resource cache with a .theme loader
+	Then when gui components come in, they'll ask for the theme object and see what surfaces they need to get to render themselves
+
+In my own editor which will sit on top of the tiled one, there will be a way to trivially make gui elements
+	the editor will use the gui elements:)
