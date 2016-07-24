@@ -1,14 +1,6 @@
-
 #Engine.py
 
-print("Name = " + __name__)
-
-print("Running Engine Module")
-
 import os, sys
-
-#print(os.path.dirname(os.path.abspath(__file__)))
-#sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 if (__name__ == "SamPy.Engine"):
 #    try:

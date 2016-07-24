@@ -1,5 +1,0 @@
-from . import PGUTextBoxComponent
-
-class PGUInputComponent(PGUTextBoxComponent.PGUTextBoxComponent):
-    def __init__(self):
-        super().__init__()

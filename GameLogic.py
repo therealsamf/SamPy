@@ -5,7 +5,6 @@ from . import Renderer
 from . import Physics
 from . import Process
 from . import Object
-#from . import Engine
 from . import Event
 from . import QuadTree
 

@@ -1,5 +1,0 @@
-
-#__init__.py for Event
-
-from . import EventManager
-from . import QuadTree
